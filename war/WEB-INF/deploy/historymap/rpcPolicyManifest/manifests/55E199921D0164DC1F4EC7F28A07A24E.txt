@@ -1,0 +1,2 @@
+serviceClass: com.ghannah.gwt.historymap.client.GreetingService
+path: 2FDF5FD0163E0D43DD073AC8BEA1777F.gwt.rpc

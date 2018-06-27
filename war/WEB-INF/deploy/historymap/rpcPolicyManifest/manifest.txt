@@ -1,0 +1,3 @@
+# Module historymap
+# RPC service class, partial path of RPC policy file
+com.ghannah.gwt.historymap.client.GreetingService, 2FDF5FD0163E0D43DD073AC8BEA1777F.gwt.rpc
