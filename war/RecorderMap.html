@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <title>History Map</title>
+    <style>
+      /* Always set the map height explicitly to define the size of the div
+       * element that contains the map. */
+      #map {
+        height: 90%;
+      }
+      /* Optional: Makes the sample page fill the window. */
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      
+      #delBut {
+      	float: right;
+      }
+    </style>
+  </head>
+  <body>
+  	<h1 align="center">History Map</h1>
+  	<div id="controls" class="nicebox">
+      <div id="list"></div>
+      <div id="delBut"><button onclick="deleteLastCoord()">Delete Last</button></div>
+    </div>
+    <div id="map"></div>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBZIVLuM_8hURogJ8jVy6wz_WLq2A3lGRQ&callback=initMap"></script>
+    <script>
+    function initMap() {
+        map = new google.maps.Map(document.getElementById('map'), {
+          zoom: 3,
+          center: {lat: 24.886, lng: -70.268},
+          mapTypeId: 'terrain',
+          styles: [{
+              featureType: 'poi',
+              stylers: [{ visibility: 'off' }]  // Turn off POI.
+            },
+            {
+              featureType: 'transit',
+              stylers: [{ visibility: 'off' }]  // Turn off bus, train stations etc.
+            },
+            {
+              featureType: 'landscape.man_made',
+              stylers: [{ visibility: 'off' }]
+            },
+            {
+              featureType: 'administrative.locality',
+              stylers: [{ visibility: 'off' }]
+            },
+            {
+              featureType: 'administrative.neighborhood',
+              stylers: [{ visibility: 'off' }]
+            },
+            {
+              featureType: 'administrative.land_parcel',
+              stylers: [{ visibility: 'off' }]
+            },
+            //{
+            //	featureType: 'administrative.country',
+            //	elementType: 'labels',
+            //	stylers: [{ visibility: 'off' }]
+            //},
+            {
+            	featureType: 'administrative.province',
+            	elementType: 'labels',
+            	stylers: [{ visibility: 'off' }]
+            },
+            {
+              featureType: 'road',
+              stylers: [{ visibility: 'off' }]  // Turn off roads
+            }],
+            disableDoubleClickZoom: false,
+            streetViewControl: false
+            
+    	});
+        map.addListener('click', addCoord);
+    }
+    
+    function addCoord(e) {
+    	document.getElementById('list').textContent += "[ " + e.latLng.lng() + ", " + e.latLng.lat() +"], ";
+    }
+    
+    function deleteLastCoord() {
+    	var n = document.getElementById('list').textContent.lastIndexOf('[');
+    	document.getElementById('list').textContent = document.getElementById('list').textContent.substring(0, n);
+    }
+    
+        </script>
+    <script async defer src="historymap/historymap.nocache.js" type="text/javascript"></script>
+  </body>
+</html>

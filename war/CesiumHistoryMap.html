@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <title>History Map in Cesium</title>
+    <style>
+      /* Always set the map height explicitly to define the size of the div
+       * element that contains the map. */
+      #map {
+        height: 100%;
+      }
+      /* Optional: Makes the sample page fill the window. */
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+  	<h1 align="center">History Map in Cesium</h1>
+    <div id="map"></div>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBZIVLuM_8hURogJ8jVy6wz_WLq2A3lGRQ&callback=initMap"></script>
+    <script>
+	  var map;
+      // This example creates a simple polygon representing the Bermuda Triangle.
+
+      function initMap() {
+  		var labels = [];
+        map = new google.maps.Map(document.getElementById('map'), {
+          zoom: 3,
+          center: {lat: 25.605706913383642, lng: 23.11206355996683},
+          mapTypeId: 'terrain',
+          styles: [{
+              featureType: 'poi',
+              stylers: [{ visibility: 'off' }]  // Turn off POI.
+            },
+            {
+              featureType: 'transit',
+              stylers: [{ visibility: 'off' }]  // Turn off bus, train stations etc.
+            },
+            {
+              featureType: 'landscape.man_made',
+              stylers: [{ visibility: 'off' }]
+            },
+            {
+              featureType: 'administrative.locality',
+              stylers: [{ visibility: 'off' }]
+            },
+            {
+              featureType: 'administrative.neighborhood',
+              stylers: [{ visibility: 'off' }]
+            },
+            {
+              featureType: 'administrative.land_parcel',
+              stylers: [{ visibility: 'off' }]
+            },
+            {
+            	featureType: 'administrative.country',
+            	elementType: 'labels',
+            	stylers: [{ visibility: 'off' }]
+            },
+            {
+            	featureType: 'administrative.province',
+            	elementType: 'labels',
+            	stylers: [{ visibility: 'off' }]
+            },
+            {
+              featureType: 'road',
+              stylers: [{ visibility: 'off' }]  // Turn off roads
+            }],
+            disableDoubleClickZoom: false,
+            streetViewControl: false
+          });
+
+        map.data.setStyle(styleFeature);
+        map.data.addListener('click', clickNation);
+  		
+  		map.data.loadGeoJson("map-data/modernMap.json", {}, function(features){
+  			var zoom = map.getZoom();
+  			var i = 0;
+  			map.data.forEach(function(feature){
+  	  			var bounds = new google.maps.LatLngBounds();
+  	  			feature.getGeometry().forEachLatLng(function(coord){
+  	  				bounds.extend(coord);
+  	  			})
+  	  			var centerPoint = bounds.getCenter();
+  	  			var marker = new google.maps.Marker({
+  	  				position: centerPoint,
+  	  				label: {
+  	  	  				text: feature.getProperty('NAME'),
+  	  	  				fontSize: "20px",
+  	  	  				fontFamily: 'Helvetica'
+  	  	  				
+  	  	  			},
+  	  				map: map,
+  	  				icon: {
+  	  		            path: google.maps.SymbolPath.CIRCLE,
+  	  		            scale: 0
+  	  		        }
+  	  			});
+  	  			labels.push(marker);
+  	  			labels[i].setVisible(feature.getProperty('ZOOM') <= zoom);
+				i++;
+  	  		});
+  		});
+
+  		google.maps.event.addListener(map, 'zoom_changed', function() {
+  			var zoom = map.getZoom();
+  			var i = 0;
+  			map.data.forEach(function(feature){
+  				labels[i].setVisible(feature.getProperty('ZOOM') <= zoom);
+  				i++;
+  			});
+  		});
+  		
+      }
+      
+      //TODO: This is where you'll need to add capability for hovering to highlight the nation
+      function styleFeature(feature) {
+          // determine whether to show this shape or not
+          var showRow = true;
+          if (feature.getProperty('NATION') == null ||
+              isNaN(feature.getProperty('NATION'))) {
+            showRow = false;
+          }
+    			  
+			  
+          return {
+              strokeWeight: 0.9,
+              strokeColor: '#fff',
+              zIndex: .5,
+              fillColor: feature.getProperty('COLOR'),
+              fillOpacity: 0.25,
+              visible: showRow
+            };
+      }
+      
+      function clickNation(e){
+    	  alert(e.feature.getProperty('NAME'));
+      }
+      
+    </script>
+    <script async defer src="historymap/historymap.nocache.js" type="text/javascript"></script>
+  </body>
+</html>

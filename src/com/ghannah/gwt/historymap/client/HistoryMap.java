@@ -1,11 +1,35 @@
+//IMMEDIATE: Add a zoom setting to each nation
+
+//TODO:  Had to move map data json files to the same directory holding the html file so they could be seen. This is probably horrible programming practice and will have to be changed someday
+//			Possible fix: Have a server holding all json files that map.data.loadgeojson calls through a url
+
+//TODO: Modern countries to add: Vatican, San Marino, Liechtenstein, Andorra, St Lucia, Antigua and Barbuda, St Vincent and the Grenadines, Dominica,
+//								 Mauritius, Comoros, Maldives, Malta, Cabo Verde, Bahrain, Palau, Nauru, Tuvalu, Samoa, Tonga, Micronesia, Marshall Islands
+
+
 //Steps:
-//Find how to color sections of map
-//	Idea: Have GreetingService.java talk to csv file, have HistoryMap.java call GreetingService.java
-//Find how to add slider (only on/off to begin)
-//	Cannibilize the infobox of firebase code to include slider widget
+//Make sure modern map is done before setting up 2011 map
+//	All countries accounted for, colors don't clash, zoom levels set, label positions good (will have to add new property), proper nation names (swaziland), 
+//Find how to add slider (only on/off button to begin)
+//	Cannibilize the infobox of firebase code to be a slider widget
 //Find how to actually change view depending on slider
+//	Likely just a matter of clearing current loaded data and loading new date-specific data
+//Create 2011 map (should just be Sudan change) - mapdata json file should have a standardized name
 //Add a couple of early civs to choose between
-//Clicking on civ centers view on it, popup opens
+//----------------------- SHOW FRIENDS AND FAMILY -----------------------
+//Find way to color disputed territory
+//Choose a start year
+//	First written record? First evidence of a city? 
+//Focus on one view a year at first
+//Citation page
+//Legal
+//----------------------- ALPHA -------------------------
+//Add a shading to show the spread of humanity before civilization
+//Clicking on civ centers view on it, popup opens with quick facts
+//	Start date, end date(if there is one), capital(s), notable people, population in that year
+//----------------------- BETA ------------------------
+//Add a second slider to appear in specific years to have months
+//Search function (dropdown list of possible results - year, state, or word found in quick facts
 
 
 
@@ -13,8 +37,16 @@
 //			Border changes in a list?
 
 //Model - map overlay coordinates
-//View - Java layout of screen, bunchof 'get_____' funcs that return values in widgets
-//Controller
+//View - Java layout of screen, bunch of 'get_____' funcs that return values in widgets
+//Controller - (this file)
+
+//CRITERIA FOR CHOOSING A MAP API:
+//Ease of injecting map data
+//Customization of labels and layers and such
+//Speed
+//IDEA: Make separate html pages for each api (google, cesium, mapbox, bing)
+//	Cesium has a demo that has half of what we want - literally an earth with a timescale underneath and live changes upon timescale events
+
 
 
 package com.ghannah.gwt.historymap.client;
@@ -36,6 +68,9 @@ import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
 
+import com.google.gwt.event.shared.HandlerManager;
+import com.google.gwt.user.client.ui.RootPanel;
+
 /**
  * Entry point classes define <code>onModuleLoad()</code>.
  */
@@ -50,120 +85,20 @@ public class HistoryMap implements EntryPoint {
 	/**
 	 * Create a remote service proxy to talk to the server-side Greeting service.
 	 */
-	private final GreetingServiceAsync greetingService = GWT.create(GreetingService.class);
+	//private final GreetingServiceAsync greetingService = GWT.create(GreetingService.class);
 
 	/**
 	 * This is the entry point method.
 	 */
 	public void onModuleLoad() {
-		final Button sendButton = new Button("Send");
-		final TextBox nameField = new TextBox();
-		nameField.setText("GWT User");
-		final Label errorLabel = new Label();
-
-		// We can add style names to widgets
-		sendButton.addStyleName("sendButton");
-
-		// Add the nameField and sendButton to the RootPanel
-		// Use RootPanel.get() to get the entire body element
-		RootPanel.get("nameFieldContainer").add(nameField);
-		RootPanel.get("sendButtonContainer").add(sendButton);
-		RootPanel.get("errorLabelContainer").add(errorLabel);
-
-		// Focus the cursor on the name field when the app loads
-		nameField.setFocus(true);
-		nameField.selectAll();
-
-		// Create the popup dialog box
-		final DialogBox dialogBox = new DialogBox();
-		dialogBox.setText("Remote Procedure Call");
-		dialogBox.setAnimationEnabled(true);
-		final Button closeButton = new Button("Close");
-		// We can set the id of a widget by accessing its Element
-		closeButton.getElement().setId("closeButton");
-		final Label textToServerLabel = new Label();
-		final HTML serverResponseLabel = new HTML();
-		VerticalPanel dialogVPanel = new VerticalPanel();
-		dialogVPanel.addStyleName("dialogVPanel");
-		dialogVPanel.add(new HTML("<b>Sending name to the server:</b>"));
-		dialogVPanel.add(textToServerLabel);
-		dialogVPanel.add(new HTML("<br><b>Server replies:</b>"));
-		dialogVPanel.add(serverResponseLabel);
-		dialogVPanel.setHorizontalAlignment(VerticalPanel.ALIGN_RIGHT);
-		dialogVPanel.add(closeButton);
-		dialogBox.setWidget(dialogVPanel);
-
-		// Add a handler to close the DialogBox
-		closeButton.addClickHandler(new ClickHandler() {
-			public void onClick(ClickEvent event) {
-				dialogBox.hide();
-				sendButton.setEnabled(true);
-				sendButton.setFocus(true);
-			}
-		});
-
-		// Create a handler for the sendButton and nameField
-		class MyHandler implements ClickHandler, KeyUpHandler {
-			/**
-			 * Fired when the user clicks on the sendButton.
-			 */
-			public void onClick(ClickEvent event) {
-				sendNameToServer();
-			}
-
-			/**
-			 * Fired when the user types in the nameField.
-			 */
-			public void onKeyUp(KeyUpEvent event) {
-				if (event.getNativeKeyCode() == KeyCodes.KEY_ENTER) {
-					sendNameToServer();
-				}
-			}
-
-			/**
-			 * Send the name from the nameField to the server and wait for a response.
-			 */
-			private void sendNameToServer() {
-				// First, we validate the input.
-				errorLabel.setText("");
-				String textToServer = nameField.getText();
-				if (!FieldVerifier.isValidName(textToServer)) {
-					errorLabel.setText("Please enter at least four characters");
-					return;
-				}
-
-				// Then, we send the input to the server.
-				sendButton.setEnabled(false);
-				textToServerLabel.setText(textToServer);
-				serverResponseLabel.setText("");
-				greetingService.greetServer(textToServer, new AsyncCallback<String>() {
-					public void onFailure(Throwable caught) {
-						// Show the RPC error message to the user
-						dialogBox.setText("Remote Procedure Call - Failure");
-						serverResponseLabel.addStyleName("serverResponseLabelError");
-						serverResponseLabel.setHTML(SERVER_ERROR);
-						dialogBox.center();
-						closeButton.setFocus(true);
-					}
-
-					public void onSuccess(String result) {
-						dialogBox.setText("Remote Procedure Call");
-						serverResponseLabel.removeStyleName("serverResponseLabelError");
-						serverResponseLabel.setHTML(result);
-						dialogBox.center();
-						closeButton.setFocus(true);
-					}
-				});
-			}
-		}
-
-		// Add a handler to send the name to the server
-		MyHandler handler = new MyHandler();
-		sendButton.addClickHandler(handler);
-		nameField.addKeyUpHandler(handler);
-	}
-	
-	class modernMap {
+		hmServiceAsync rpcService = GWT.create(hmService.class);
+		HandlerManager eventBus = new HandlerManager(null);
+		AppController appViewer = new AppController(rpcService, eventBus);
+		System.out.println("Headed to appController");
+		appViewer.go(RootPanel.get());
 		
+	
+
+
 	}
 }
